@@ -6,9 +6,11 @@
 
 namespace App\Repository;
 
-use App\Contracts\CalculatorInterface;
-use App\Tweets\EngagementCalculator;
+use Exception;
+use Carbon\Carbon;
+use App\Models\TweetReachModel;
 use Illuminate\Support\Facades\Log;
+use App\Contracts\CalculatorInterface;
 
 class TweetRepository
 {
@@ -18,18 +20,47 @@ class TweetRepository
      * @return bool Returns true/false based on whether cache is valid or not
      * Returns true - if record found in DB and still valid
      *  - 2 hour has not passed yet
-     * Returns false - if record not found in DB
-     *  - 2 hour has passed
+     * Returns false for following cases:
+     *  - if record not found in DB
+     *  - cache is expired and needs to be refreshed. By default cache is valid
+     *    only for 2 hour, @see tweetreach.cache_expire key in config/tweetreach.php
      */
     public function isCacheValid(string $id) : bool
     {
+        $records = TweetReachModel::where(['tweet_id' => $id])
+            ->select(['total_sum', 'updated_at'])->first();
+
+        if ($records) {
+            $updatedTime = Carbon::createFromFormat(
+                config('tweetreach.date_format'),
+                $records->updated_at
+            );
+
+            $now = Carbon::now('UTC');
+            $hours = $now->diffInHours($updatedTime);
+
+            return (bool) $hours < intval(config('tweetreach.cache_expire'));
+        }
+
         return false;
-        // TODO Implement cache Logic
     }
 
-    public function getCachedSum()
+    /**
+     * Query the DB and return the cached sum
+     * @param string $id
+     * @return int Total Sum
+     * @throws \Exception
+     */
+    public function getCachedSum(string $id) : int
     {
-        // TODO Get from DB
+        $records = TweetReachModel::where(['tweet_id' => $id])
+          ->select(['total_sum'])->first();
+
+        if (!$records) {
+            throw new Exception("Trying to access invalid cache.");
+        }
+
+        return intval($records->total_sum);
     }
 
     /**
@@ -38,10 +69,22 @@ class TweetRepository
      */
     public function persistInDB(string $id, float $sum)
     {
-        // TODO Write code to persist in DB
+        TweetReachModel::where(['tweet_id' => $id])
+           ->updateOrCreate([
+               'tweet_id' => $id,
+               'total_sum' => $sum,
+               'updated_at' => Carbon::now('UTC'),
+           ]);
+        Log::info('Persisted cache in DB', ['id' => $id, 'sum' => $sum]);
     }
 
-    public function retrieveTweetReach(string $id, CalculatorInterface $calculator)
+    /**
+     * Returns the total number of people reached by the retweet
+     * @param string $id Tweet ID
+     * @param \App\Contracts\CalculatorInterface $calculator
+     * @return int Total sum of the follower
+     */
+    public function retrieveTweetReach(string $id, CalculatorInterface $calculator) : int
     {
         Log::info('Calculating tweet reach.', ['id' => $id]);
         $sum = $calculator->calculate($id);

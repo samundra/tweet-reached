@@ -36,6 +36,7 @@ class EngagementController extends Controller
      * @param \Illuminate\Http\Request $request
      * @param string $id
      * @return JsonResponse
+     * @throws \Exception
      */
     public function calculate(Request $request, string $id) : JsonResponse
     {
