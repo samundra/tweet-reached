@@ -4,90 +4,31 @@
         <meta charset="utf-8">
         <meta http-equiv="X-UA-Compatible" content="IE=edge">
         <meta name="viewport" content="width=device-width, initial-scale=1">
-
-        <title>Laravel</title>
-
-        <!-- Fonts -->
-        <link href="https://fonts.googleapis.com/css?family=Raleway:100,600" rel="stylesheet" type="text/css">
-
-        <!-- Styles -->
-        <style>
-            html, body {
-                background-color: #fff;
-                color: #636b6f;
-                font-family: 'Raleway', sans-serif;
-                font-weight: 100;
-                height: 100vh;
-                margin: 0;
-            }
-
-            .full-height {
-                height: 100vh;
-            }
-
-            .flex-center {
-                align-items: center;
-                display: flex;
-                justify-content: center;
-            }
-
-            .position-ref {
-                position: relative;
-            }
-
-            .top-right {
-                position: absolute;
-                right: 10px;
-                top: 18px;
-            }
-
-            .content {
-                text-align: center;
-            }
-
-            .title {
-                font-size: 84px;
-            }
-
-            .links > a {
-                color: #636b6f;
-                padding: 0 25px;
-                font-size: 12px;
-                font-weight: 600;
-                letter-spacing: .1rem;
-                text-decoration: none;
-                text-transform: uppercase;
-            }
-
-            .m-b-md {
-                margin-bottom: 30px;
-            }
-        </style>
+        <title>Tweets Reached</title>
+        <link rel="stylesheet" type="text/css" href="css/app.css"/>
     </head>
     <body>
-        <div class="flex-center position-ref full-height">
-            @if (Route::has('login'))
-                <div class="top-right links">
-                    @auth
-                        <a href="{{ url('/home') }}">Home</a>
-                    @else
-                        <a href="{{ route('login') }}">Login</a>
-                        <a href="{{ route('register') }}">Register</a>
-                    @endauth
-                </div>
-            @endif
+        <div class="container-fluid">
+            <div class="col-md-12 block-main">
+                <h2>Enter Tweet URL: </h2>
+                <form action="/tweet/reached" role="form">
+                    <input type="text" class="input form-control" name="tweet_url" value="" placeholder="Enter tweet URL" />
+                    <br/>
+                    <button class="btn btn-lg btn-primary" type="button" name="submit" value="submit">Calculate Total Reach</button>
+                </form>
+            </div>
 
-            <div class="content">
-                <div class="title m-b-md">
-                    Laravel
-                </div>
-
-                <div class="links">
-                    <a href="https://laravel.com/docs">Documentation</a>
-                    <a href="https://laracasts.com">Laracasts</a>
-                    <a href="https://laravel-news.com">News</a>
-                    <a href="https://forge.laravel.com">Forge</a>
-                    <a href="https://github.com/laravel/laravel">GitHub</a>
+            <div class="col-md-12 block-results">
+                <div class="row">
+                    <div class="col-md-6">
+                        <h2>Total Reached : <span class="count">1000</span> Followers</h2>
+                    </div>
+                    <div class="col-md-6">
+                        <h2>Recently Searched</h2>
+                        <ul>
+                            <li><a href="javascript:void(0);" >http://www.twitter.com/status/10000</a></li>
+                        </ul>
+                    </div>
                 </div>
             </div>
         </div>
