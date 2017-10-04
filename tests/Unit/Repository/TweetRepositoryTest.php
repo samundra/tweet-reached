@@ -86,7 +86,6 @@ class TweetRepositoryTest extends TestCase
     public function getDummyTweetReachModel()
     {
         return new TweetReachModel([
-            'id' => 133,
             'tweet_id' => 10000,
             'total_sum' => 118627,
             'updated_at' => '2017-10-04 02:16:41+00',
@@ -102,6 +101,7 @@ class TweetRepositoryTest extends TestCase
     {
         $model = $this->getDummyTweetReachModel();
         $model->updated_at = $updatedAt;
+        $model->id = 37;
 
         $this->tweet->shouldReceive('where')->once()->andReturnSelf()
             ->shouldReceive('select')->with(['id', 'total_sum', 'updated_at', 'info'])->andReturnSelf()
@@ -163,10 +163,9 @@ class TweetRepositoryTest extends TestCase
     {
         $this->setTweetReachModelExpectation();
 
-        $model = $this->getDummyTweetReachModel();
         \Carbon\Carbon::setTestNow('2017-10-04 02:16:41+00');
         $updatedAt = new \Carbon\Carbon('2017-10-04 02:16:41+00', 'UTC');
-        $this->tweet->shouldReceive('destroy')->once()->with($model->id)->andReturn(true);
+        $this->tweet->shouldReceive('destroy')->once()->with(37)->andReturn(true);
         $this->tweet->shouldReceive('where')->once()->andReturnSelf()
             ->shouldReceive('create')->with([
                 'tweet_id' => 10000,

@@ -111,6 +111,17 @@ class TweetRepository
     }
 
     /**
+     * @param int $id Record to delete from DB
+     * @return bool True if deleted otherwise false
+     */
+    public function destroy(int $id) : bool
+    {
+        $this->logger->info('Destroying retweet', ['id' => $id]);
+
+        return (bool) $this->tweet->destroy($id);
+    }
+
+    /**
      * @param string $id
      * @param int $sum
      * @param Carbon $updatedAt
@@ -126,7 +137,7 @@ class TweetRepository
 
         if ($record) {
             $this->logger->info('Deleted previous cache record.', ['id' => $id, 'sum' => $sum]);
-            $this->tweet->destroy($record->id);
+            $this->destroy($record->id);
         }
 
         $this->tweet->where(['tweet_id' => $id])
