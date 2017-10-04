@@ -6,13 +6,13 @@
 
 namespace App\Http\Controllers\Tweet;
 
-use App\Http\Requests\CalculateRequest;
-use Illuminate\Http\Request;
+use Exception;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Log;
 use App\Repository\TweetRepository;
 use App\Tweets\EngagementCalculator;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\CalculateRequest;
 
 class EngagementController extends Controller
 {
@@ -32,9 +32,19 @@ class EngagementController extends Controller
         $this->calculator = $calculator;
     }
 
-    private function extractIdFromRequestQuery(string $query)
+    /**
+     * Extracts the tweet id from the supplied query url
+     * @param string $query
+     * @return string Tweet ID
+     * @throws \Exception
+     */
+    private function extractIdFromRequestQuery(string $query) : string
     {
         $url = explode('/', parse_url($query)['path']);
+
+        if (!isset($url[2]) || !isset($url[3])) {
+            throw new Exception("Not enough data to retrieve tweet information.");
+        }
 
         if ($url[2] === 'status') {
             return $url[3]; // Position of the status id
