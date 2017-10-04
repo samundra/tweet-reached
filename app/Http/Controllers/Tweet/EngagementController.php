@@ -64,41 +64,89 @@ class EngagementController extends Controller
 
         if ($isCached) {
             $sum = $this->tweetRepository->getCachedSum($id);
+            $retweetInformation = $this->tweetRepository->getRetweetInformation($id);
+
             Log::info('Returning from cache', ['id' => $id, 'sum' => $sum]);
-            return new JsonResponse([
-                'success' => true,
-                'data' => [
-                    'id' => $id,
-                    'sum' => $sum,
-                ]
+            return $this->showSuccessJsonResponse([
+                'id' => $id,
+                'sum' => $sum,
+                'tweet' => $retweetInformation,
+                'message' => __('message.from_cache'),
             ]);
         }
 
         Log::info('Cache needs to be refreshed', ['id' => $id]);
 
         try {
-            $sum = $this->tweetRepository->retrieveTweetReach($id, $this->calculator);
+            // if it has never been retweeted then no need to aggregate data
+            if (false === $this->tweetRepository->isRetweeted($id)) {
+                return $this->showNoRetweetJsonResponse();
+            }
 
-            $this->tweetRepository->persistInDB($id, $sum);
-            return new JsonResponse([
-                'success' => true,
-                'data' => [
-                    'sum' => $sum,
-                    'id' => $id
-                ]
+            $aggregatedData = $this->tweetRepository->aggregate($id, $this->calculator);
+            $sum = $aggregatedData['sum'];
+            $retweetInformation = $aggregatedData['retweetInformation'];
+
+            $this->tweetRepository->persistInDB($id, $sum, $retweetInformation);
+
+            return $this->showSuccessJsonResponse([
+                'id' => $id,
+                'sum' => $sum,
+                'tweet' => $retweetInformation,
+                'message' => __('message.from_twitter_api'),
             ]);
         } catch (Exception $exception) {
-            Log::error('Error during engagement calculation', [
+            Log::error('Error occured', [
                 'id' => $id,
                 'stack_trace' => $exception->getTraceAsString(),
+                'method' => __METHOD__,
+                'line' => __LINE__,
             ]);
-            return new JsonResponse([
-                'success' => false,
-                'data' => [
-                    'id' => $id,
-                    'message' => 'Error occured during engagement calculation.',
-                ]
+            return $this->showErrorJsonResponse([
+                'id' => $id,
+                'message' => 'Error ::' . $exception->getMessage(),
             ]);
         }
+    }
+
+    /**
+     * Success Json response
+     * @param $data
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function showErrorJsonResponse($data)
+    {
+        return new JsonResponse([
+            'success' => false,
+            'data' => $data,
+        ]);
+    }
+
+
+    /**
+     * Success Json response
+     * @param $data
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function showSuccessJsonResponse($data)
+    {
+        return new JsonResponse([
+            'success' => true,
+            'data' => $data,
+        ]);
+    }
+
+    /**
+     * Show the Empty Response
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function showNoRetweetJsonResponse()
+    {
+        return new JsonResponse([
+            'success' => false,
+            'data' => [
+                'message' => __('message.no_retweet')
+            ]
+        ]);
     }
 }
