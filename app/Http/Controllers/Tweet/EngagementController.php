@@ -7,8 +7,8 @@
 namespace App\Http\Controllers\Tweet;
 
 use Exception;
+use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Support\Facades\Log;
 use App\Repository\TweetRepository;
 use App\Tweets\EngagementCalculator;
 use App\Http\Controllers\Controller;
@@ -26,10 +26,19 @@ class EngagementController extends Controller
      */
     protected $calculator;
 
-    public function __construct(TweetRepository $tweetRepository, EngagementCalculator $calculator)
-    {
+    /**
+     * @var \Psr\Log\LoggerInterface
+     */
+    protected $logger;
+
+    public function __construct(
+        TweetRepository $tweetRepository,
+        EngagementCalculator $calculator,
+        \Psr\Log\LoggerInterface $logger
+    ) {
         $this->tweetRepository = $tweetRepository;
         $this->calculator = $calculator;
+        $this->logger = $logger;
     }
 
     /**
@@ -60,13 +69,15 @@ class EngagementController extends Controller
     public function calculate(CalculateRequest $request) : JsonResponse
     {
         $id = $this->extractIdFromRequestQuery($request->get('query'));
-        $isCached = $this->tweetRepository->isCacheValid($id);
+        $format = config('tweetreach.date_format');
+        $expire =  config('tweetreach.cache_expire');
+        $isCached = $this->tweetRepository->isCacheValid($id, $format, $expire);
 
         if ($isCached) {
             $sum = $this->tweetRepository->getCachedSum($id);
             $retweetInformation = $this->tweetRepository->getRetweetInformation($id);
 
-            Log::info('Returning from cache', ['id' => $id, 'sum' => $sum]);
+            $this->logger->info('Returning from cache', ['id' => $id, 'sum' => $sum]);
             return $this->showSuccessJsonResponse([
                 'id' => $id,
                 'sum' => $sum,
@@ -75,7 +86,7 @@ class EngagementController extends Controller
             ]);
         }
 
-        Log::info('Cache needs to be refreshed', ['id' => $id]);
+        $this->logger->info('Cache needs to be refreshed', ['id' => $id]);
 
         try {
             // if it has never been retweeted then no need to aggregate data
@@ -87,7 +98,12 @@ class EngagementController extends Controller
             $sum = $aggregatedData['sum'];
             $retweetInformation = $aggregatedData['retweetInformation'];
 
-            $this->tweetRepository->persistInDB($id, $sum, $retweetInformation);
+            $this->tweetRepository->persistInDB(
+                $id,
+                $sum,
+                new Carbon('now', 'UTC'),
+                $retweetInformation
+            );
 
             return $this->showSuccessJsonResponse([
                 'id' => $id,
@@ -96,7 +112,7 @@ class EngagementController extends Controller
                 'message' => __('message.from_twitter_api'),
             ]);
         } catch (Exception $exception) {
-            Log::error('Error occured', [
+            $this->logger->error('Error occured', [
                 'id' => $id,
                 'stack_trace' => $exception->getTraceAsString(),
                 'method' => __METHOD__,
@@ -121,7 +137,6 @@ class EngagementController extends Controller
             'data' => $data,
         ]);
     }
-
 
     /**
      * Success Json response
