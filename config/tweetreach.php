@@ -5,6 +5,8 @@
  */
 
 return [
+    'application_title' => 'Retweet Follower Count Calculator',
+
     'date_format' => env('APP_DATEFORMAT', 'Y-m-d H:i:sO'),
 
     // Cache will be valid for 2 hours, After this DB record will be refreshed
