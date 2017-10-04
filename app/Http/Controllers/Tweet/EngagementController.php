@@ -7,6 +7,7 @@
 namespace App\Http\Controllers\Tweet;
 
 use Exception;
+use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Log;
 use App\Repository\TweetRepository;
@@ -60,7 +61,9 @@ class EngagementController extends Controller
     public function calculate(CalculateRequest $request) : JsonResponse
     {
         $id = $this->extractIdFromRequestQuery($request->get('query'));
-        $isCached = $this->tweetRepository->isCacheValid($id);
+        $format = config('tweetreach.date_format');
+        $expire =  config('tweetreach.cache_expire');
+        $isCached = $this->tweetRepository->isCacheValid($id, $format, $expire);
 
         if ($isCached) {
             $sum = $this->tweetRepository->getCachedSum($id);
@@ -87,7 +90,12 @@ class EngagementController extends Controller
             $sum = $aggregatedData['sum'];
             $retweetInformation = $aggregatedData['retweetInformation'];
 
-            $this->tweetRepository->persistInDB($id, $sum, $retweetInformation);
+            $this->tweetRepository->persistInDB(
+                $id,
+                $sum,
+                new Carbon('now', 'UTC'),
+                $retweetInformation
+            );
 
             return $this->showSuccessJsonResponse([
                 'id' => $id,

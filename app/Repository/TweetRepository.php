@@ -8,10 +8,10 @@ namespace App\Repository;
 
 use Exception;
 use Carbon\Carbon;
-use App\Models\TweetReachModel;
-use Illuminate\Support\Facades\Log;
-use App\Contracts\CalculatorInterface;
+use Psr\Log\LoggerInterface;
 use Thujohn\Twitter\Twitter;
+use App\Models\TweetReachModel;
+use App\Contracts\CalculatorInterface;
 
 class TweetRepository
 {
@@ -22,13 +22,34 @@ class TweetRepository
     const TWITTER_RESPONSE_LIMIT = 100;
 
     /**
-     * @var \Thujohn\Twitter\Twitter
+     * @var \App\Models\TweetReachModel $tweet
+     */
+    protected $tweet;
+
+    /**
+     * @var \Thujohn\Twitter\Twitter $twitter
      */
     protected $twitter;
 
-    public function __construct(Twitter $twitter)
-    {
+    /**
+     * @var
+     */
+    protected $logger;
+
+    /**
+     * TweetRepository constructor.
+     * @param \App\Models\TweetReachModel $tweet
+     * @param \Thujohn\Twitter\Twitter $twitter
+     * @param \Psr\Log\LoggerInterface $logger
+     */
+    public function __construct(
+        TweetReachModel $tweet,
+        Twitter $twitter,
+        LoggerInterface $logger
+    ) {
+        $this->tweet = $tweet;
         $this->twitter = $twitter;
+        $this->logger = $logger;
     }
 
     /**
@@ -38,13 +59,15 @@ class TweetRepository
      */
     public function getTweetById(string $id)
     {
-        return TweetReachModel::where(['tweet_id' => $id])
+        return $this->tweet->where(['tweet_id' => $id])
             ->select(['id', 'total_sum', 'updated_at', 'info'])->first();
     }
 
     /**
      * Check if the record is already cached in DB or not
-     * @param string $id
+     * @param string $id Tweet ID
+     * @param string $format Format for the date supplied to carbon
+     * @param int $expire Cache expire time
      * @return bool Returns true/false based on whether cache is valid or not
      * Returns true - if record found in DB and still valid
      *  - 2 hour has not passed yet
@@ -53,20 +76,17 @@ class TweetRepository
      *  - cache is expired and needs to be refreshed. By default cache is valid
      *    only for 2 hour, @see tweetreach.cache_expire key in config/tweetreach.php
      */
-    public function isCacheValid(string $id) : bool
+    public function isCacheValid(string $id, string $format, int $expire) : bool
     {
         $records = $this->getTweetById($id);
 
         if ($records) {
-            $updatedTime = Carbon::createFromFormat(
-                config('tweetreach.date_format'),
-                $records->updated_at
-            );
+            $updatedTime = Carbon::createFromFormat($format, $records->updated_at);
 
             $now = Carbon::now('UTC');
             $hours = $now->diffInHours($updatedTime);
 
-            return $hours < intval(config('tweetreach.cache_expire'));
+            return $hours < intval($expire);
         }
 
         return false;
@@ -80,7 +100,7 @@ class TweetRepository
      */
     public function getCachedSum(string $id) : int
     {
-        $records = TweetReachModel::where(['tweet_id' => $id])
+        $records = $this->tweet->where(['tweet_id' => $id])
           ->select(['total_sum'])->first();
 
         if (!$records) {
@@ -92,30 +112,32 @@ class TweetRepository
 
     /**
      * @param string $id
-     * @param float $sum
+     * @param int $sum
+     * @param Carbon $updatedAt
      * @param array $retweetInformation
      * @throws \Exception
      */
-    public function persistInDB(string $id, float $sum, array $retweetInformation)
+    public function persistInDB(string $id, int $sum, Carbon $updatedAt, array $retweetInformation)
     {
-        Log::info('Try to persist in DB.', ['id' => $id, 'sum' => $sum]);
+        $this->logger->info('Try to persist in DB.', ['id' => $id, 'sum' => $sum]);
 
         // Delete the previous record, we don't want to insert duplicate
         $record = $this->getTweetById($id);
+
         if ($record) {
-            Log::info('Deleted previous cache record.', ['id' => $id, 'sum' => $sum]);
-            TweetReachModel::destroy($record->id);
+            $this->logger->info('Deleted previous cache record.', ['id' => $id, 'sum' => $sum]);
+            $this->tweet->destroy($record->id);
         }
 
-        TweetReachModel::where(['tweet_id' => $id])
+        $this->tweet->where(['tweet_id' => $id])
            ->create([
                'tweet_id' => $id,
                'total_sum' => $sum,
-               'updated_at' => new Carbon('now', 'UTC'),
+               'updated_at' => $updatedAt,
                'info' => json_encode($retweetInformation),
            ]);
 
-        Log::info('Persisted cache in DB', ['id' => $id, 'sum' => $sum]);
+        $this->logger->info('Persisted cache in DB', ['id' => $id, 'sum' => $sum]);
     }
 
     /**
@@ -149,7 +171,7 @@ class TweetRepository
      */
     public function aggregate(string $id, CalculatorInterface $calculator) : array
     {
-        Log::info('Calculating tweet reach.', ['id' => $id]);
+        $this->logger->info('Calculating tweet reach.', ['id' => $id]);
         $followers = $this->getRetweeters($id);
         $userIds = implode(',', $followers['ids']);
 
@@ -160,7 +182,7 @@ class TweetRepository
         $sum = $calculator->calculate($users);
         $retweetInformation = $this->extractRetweetInformation($id, $users);
 
-        Log::info('Calculated tweet reach.', ['id' => $id, 'sum' => $sum, 'info' => json_encode($retweetInformation)]);
+        $this->logger->info('Calculated tweet reach.', ['id' => $id, 'sum' => $sum, 'info' => json_encode($retweetInformation)]);
 
         return [
             'sum' => $sum,
