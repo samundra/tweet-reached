@@ -56,7 +56,6 @@ var mainApp = new Vue({
             $calculateButton.attr("disabled", "disabled");
             $calculateButton.text("Calculating ...");
 
-
             $.ajax({
                 url: 'calculate',
                 data: { query: self.query },
