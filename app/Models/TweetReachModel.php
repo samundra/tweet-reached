@@ -1,7 +1,7 @@
 <?php
 /**
- * @author Zen eServices Pte Ltd
- * @copyright Copyright (c) 2017 Zen eServices Pte Ltd
+ * @author Samundra Shrestha <samundra.shr@gmail.com>
+ * @copyright Copyright (c) 2017
  */
 
 namespace App\Models;

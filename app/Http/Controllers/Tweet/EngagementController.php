@@ -67,13 +67,11 @@ class EngagementController extends Controller
             $retweetInformation = $this->tweetRepository->getRetweetInformation($id);
 
             Log::info('Returning from cache', ['id' => $id, 'sum' => $sum]);
-            return new JsonResponse([
-                'success' => true,
-                'data' => [
-                    'id' => $id,
-                    'sum' => $sum,
-                    'tweet' => $retweetInformation,
-                ]
+            return $this->showSuccessJsonResponse([
+                'id' => $id,
+                'sum' => $sum,
+                'tweet' => $retweetInformation,
+                'message' => __('message.from_cache'),
             ]);
         }
 
@@ -91,38 +89,63 @@ class EngagementController extends Controller
 
             $this->tweetRepository->persistInDB($id, $sum, $retweetInformation);
 
-            return new JsonResponse([
-                'success' => true,
-                'data' => [
-                    'id' => $id,
-                    'sum' => $sum,
-                    'tweet' => $retweetInformation,
-                ]
+            return $this->showSuccessJsonResponse([
+                'id' => $id,
+                'sum' => $sum,
+                'tweet' => $retweetInformation,
+                'message' => __('message.from_twitter_api'),
             ]);
         } catch (Exception $exception) {
-            throw $exception;
-//            Log::error('Error occured', [
-//                'id' => $id,
-//                'stack_trace' => $exception->getTraceAsString(),
-//                'method' => __METHOD__,
-//                'line' => __LINE__,
-//            ]);
-//            return new JsonResponse([
-//                'success' => false,
-//                'data' => [
-//                    'id' => $id,
-//                    'message' => 'Error ::' . $exception->getMessage(),
-//                ]
-//            ]);
+            Log::error('Error occured', [
+                'id' => $id,
+                'stack_trace' => $exception->getTraceAsString(),
+                'method' => __METHOD__,
+                'line' => __LINE__,
+            ]);
+            return $this->showErrorJsonResponse([
+                'id' => $id,
+                'message' => 'Error ::' . $exception->getMessage(),
+            ]);
         }
     }
 
+    /**
+     * Success Json response
+     * @param $data
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function showErrorJsonResponse($data)
+    {
+        return new JsonResponse([
+            'success' => false,
+            'data' => $data,
+        ]);
+    }
+
+
+    /**
+     * Success Json response
+     * @param $data
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function showSuccessJsonResponse($data)
+    {
+        return new JsonResponse([
+            'success' => true,
+            'data' => $data,
+        ]);
+    }
+
+    /**
+     * Show the Empty Response
+     * @return \Illuminate\Http\JsonResponse
+     */
     public function showNoRetweetJsonResponse()
     {
         return new JsonResponse([
             'success' => false,
             'data' => [
-                'message' => 'This tweet has not been retweeted yet.'
+                'message' => __('message.no_retweet')
             ]
         ]);
     }

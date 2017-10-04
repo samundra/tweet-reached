@@ -70,7 +70,7 @@ var mainApp = new Vue({
                         self.tweet = response.data.tweet;
                         self.firstTime = false;
                         self.message = response.data.message;
-                        self.message = true;
+                        self.showMessage = true;
                     }
 
                     if (response.success == false) {
