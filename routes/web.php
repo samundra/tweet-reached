@@ -15,5 +15,4 @@ Route::get('/', function () {
     return view('welcome');
 });
 
-Route::get('/calculate/{id}', 'Tweet\EngagementController@calculate')
-    ->name('calculate');
+Route::get('/calculate', 'Tweet\EngagementController@calculate')->name('calculate');

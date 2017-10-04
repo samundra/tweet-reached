@@ -15,6 +15,17 @@ use App\Contracts\CalculatorInterface;
 class TweetRepository
 {
     /**
+     * Return the Tweet
+     * @param string $id
+     * @return TweetReachModel|null
+     */
+    public function getTweetById(string $id)
+    {
+        return TweetReachModel::where(['tweet_id' => $id])
+            ->select(['id', 'total_sum', 'updated_at'])->first();
+    }
+
+    /**
      * Check if the record is already cached in DB or not
      * @param string $id
      * @return bool Returns true/false based on whether cache is valid or not
@@ -27,8 +38,7 @@ class TweetRepository
      */
     public function isCacheValid(string $id) : bool
     {
-        $records = TweetReachModel::where(['tweet_id' => $id])
-            ->select(['total_sum', 'updated_at'])->first();
+        $records = $this->getTweetById($id);
 
         if ($records) {
             $updatedTime = Carbon::createFromFormat(
@@ -39,7 +49,7 @@ class TweetRepository
             $now = Carbon::now('UTC');
             $hours = $now->diffInHours($updatedTime);
 
-            return (bool) $hours < intval(config('tweetreach.cache_expire'));
+            return $hours < intval(config('tweetreach.cache_expire'));
         }
 
         return false;
@@ -66,9 +76,19 @@ class TweetRepository
     /**
      * @param string $id
      * @param float $sum
+     * @throws \Exception
      */
     public function persistInDB(string $id, float $sum)
     {
+        Log::info('Try to persist in DB.', ['id' => $id, 'sum' => $sum]);
+
+        // Delete the previous record, we don't want to insert duplicate
+        $record = $this->getTweetById($id);
+        if ($record) {
+            Log::info('Deleted previous cache record.', ['id' => $id, 'sum' => $sum]);
+            TweetReachModel::destroy($record->id);
+        }
+
         TweetReachModel::where(['tweet_id' => $id])
            ->updateOrCreate([
                'tweet_id' => $id,

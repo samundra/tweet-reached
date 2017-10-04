@@ -6,6 +6,7 @@
 
 namespace App\Http\Controllers\Tweet;
 
+use App\Http\Requests\CalculateRequest;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Log;
@@ -31,16 +32,27 @@ class EngagementController extends Controller
         $this->calculator = $calculator;
     }
 
+    private function extractIdFromRequestQuery(string $query)
+    {
+        $url = explode('/', parse_url($query)['path']);
+
+        if ($url[2] === 'status') {
+            return $url[3]; // Position of the status id
+        }
+    }
+
     /**
-     * Calculate the engagement
-     * @param \Illuminate\Http\Request $request
-     * @param string $id
+     * Calculate the total reached engagement
+     * @param \App\Http\Requests\CalculateRequest $request
      * @return JsonResponse
      * @throws \Exception
      */
-    public function calculate(Request $request, string $id) : JsonResponse
+    public function calculate(CalculateRequest $request) : JsonResponse
     {
-        if ($this->tweetRepository->isCacheValid($id)) {
+        $id = $this->extractIdFromRequestQuery($request->get('query'));
+        $isCached = $this->tweetRepository->isCacheValid($id);
+
+        if ($isCached) {
             $sum = $this->tweetRepository->getCachedSum($id);
             Log::info('Returning from cache', ['id' => $id, 'sum' => $sum]);
             return new JsonResponse([
@@ -51,6 +63,8 @@ class EngagementController extends Controller
                 ]
             ]);
         }
+
+        Log::info('Cache needs to be refreshed', ['id' => $id]);
 
         try {
             $sum = $this->tweetRepository->retrieveTweetReach($id, $this->calculator);
