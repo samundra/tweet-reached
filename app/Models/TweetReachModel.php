@@ -17,12 +17,14 @@ class TweetReachModel extends Model
      */
     protected $table = 'tweet_reach';
 
-    // We don't have created_at columns
+    // We'll manually update the timestamp fields
     public $timestamps = false;
 
+    /** @var array Mass-assignable fields */
     protected $fillable = [
         'total_sum',
         'tweet_id',
-        'updated_at'
+        'updated_at',
+        'info',
     ];
 }

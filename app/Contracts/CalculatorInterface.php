@@ -9,9 +9,10 @@ namespace App\Contracts;
 interface CalculatorInterface
 {
     /**
-     * Calculate the total sum
-     * @param mixed $id
+     * Calculate the total follower sum for the twitter user objects
+     * @param mixed $users Array of Twitter User Object
+     * @see https://developer.twitter.com/en/docs/tweets/data-dictionary/overview/user-object
      * @return int
      */
-    public function calculate($id) : int;
+    public function calculate($users) : int;
 }

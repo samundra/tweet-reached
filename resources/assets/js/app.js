@@ -9,18 +9,27 @@ require('./bootstrap');
 
 window.Vue = require('vue');
 
+window.common = {
+    message: {
+        noRetweet: "This tweet hasn't been retweeted.",
+    }
+};
+
 var mainApp = new Vue({
     el: '#app',
     data: {
         query: '',
         inProgress: false,
+        firstTime: true,
         totalCount: 0,
-        error: false,
+        tweet: {
+            retweetCount: 0,
+            retweeters: [],
+        },
         response: null,
-        links: [
-            { text: 'https://twitter.com/CNN/status/915109755902988289'},
-            { text: 'https://twitter.com/CNN/status/915109755902988290'},
-        ]
+        showMessage: false,
+        message: {},
+        links: []
     },
     methods: {
         resetFields: function () {
@@ -58,6 +67,15 @@ var mainApp = new Vue({
                         self.response = response;
                         self.totalCount = response.data.sum;
                         self.links.unshift({ text: self.query });
+                        self.tweet = response.data.tweet;
+                        self.firstTime = false;
+                        self.message = response.data.message;
+                        self.message = true;
+                    }
+
+                    if (response.success == false) {
+                        self.message = response.data.message;
+                        self.showMessage = true;
                     }
                     // Reset back to previou states
                     self.inProgress = false;
