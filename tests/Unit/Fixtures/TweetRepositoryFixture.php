@@ -13,9 +13,9 @@ class TweetRepositoryFixture
         return [
             'userIds' => [111, 2233, 333, 444],
             'expected' => [
-                'sum' => 50,
+                'peopleReached' => 50,
                 'retweetInformation' => [
-                    'retweetCount' => 1000,
+                    'retweetCount' => '1,000',
                     'retweeters' => [
                         [
                             'name' => 'sample_1',
@@ -56,6 +56,22 @@ class TweetRepositoryFixture
     {
         return (object) [
             'retweet_count' => $retweetCount
+        ];
+    }
+
+    public static function getNoRetweetResponseFixture()
+    {
+        return [
+            'success' => false,
+            'data' => [
+                'id' => '914512720484904960',
+                'peopleReached' => 0,
+                'tweet' => [
+                    'retweetCount' => 0,
+                    'retweeters' => [],
+                ],
+                'message' => 'This tweet has not been retweeted yet.'
+            ]
         ];
     }
 }

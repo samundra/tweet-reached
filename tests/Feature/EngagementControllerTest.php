@@ -7,6 +7,7 @@
 namespace Tests\Feature;
 
 use Tests\TestCase;
+use Tests\Unit\Fixtures\TweetRepositoryFixture;
 
 /**
  * Class EngagementControllerTest
@@ -48,21 +49,21 @@ class EngagementControllerTest extends TestCase
      */
     public function testCalculatePageReturnNoRetweetResponse()
     {
+        /** @var \App\Repository\TweetRepository $tweetRepository */
+        $tweetRepository = app('App\Repository\TweetRepository');
+        $tweet = $tweetRepository->getTweetById(914512720484904960);
+
+        if ($tweet) {
+            $tweetRepository->destroy($tweet->id);
+        }
+
         $response = $this->json('GET', '/calculate', [
             'query' => 'https://twitter.com/samushr/status/914512720484904960'
         ]);
 
         $response->assertStatus(200);
 
-        $data = $response->json();
-        $expected = [
-            'success' => false,
-            'data' => [
-                'message' => 'This tweet has not been retweeted yet.'
-            ]
-        ];
-
-        $this->assertEquals($data, $expected);
+        $this->assertEquals($response->json(), TweetRepositoryFixture::getNoRetweetResponseFixture());
     }
 
     /**
