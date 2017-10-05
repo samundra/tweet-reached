@@ -193,7 +193,11 @@ class TweetRepository
         $sum = $calculator->calculate($users);
         $retweetInformation = $this->extractRetweetInformation($id, $users);
 
-        $this->logger->info('Calculated tweet reach.', ['id' => $id, 'sum' => $sum, 'info' => json_encode($retweetInformation)]);
+        $this->logger->info('Calculated tweet reach.', [
+            'id' => $id,
+            'sum' => $sum,
+            'info' => json_encode($retweetInformation)
+        ]);
 
         return [
             'sum' => $sum,

@@ -41,11 +41,6 @@ class EngagementController extends Controller
         $this->logger = $logger;
     }
 
-    public function index()
-    {
-
-    }
-
     /**
      * Extracts the tweet id from the supplied query url
      * @param string $query

@@ -13,7 +13,7 @@ class AlterTweetReachAddMetaInfo extends Migration
      */
     public function up()
     {
-$sql = <<<SQL
+        $sql = <<<SQL
 ALTER TABLE tweet_reach ADD COLUMN info JSON default NULL
 SQL;
         DB::statement($sql);
@@ -26,7 +26,7 @@ SQL;
      */
     public function down()
     {
-$sql = <<<SQL
+        $sql = <<<SQL
 ALTER TABLE tweet_reach DROP COLUMN info
 SQL;
         DB::statement($sql);

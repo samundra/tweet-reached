@@ -13,7 +13,7 @@ class CreateTweetReachTable extends Migration
      */
     public function up()
     {
-$sql = <<<SQL
+        $sql = <<<SQL
 CREATE TABLE tweet_reach (
   id SERIAL NOT NULL PRIMARY KEY,
   tweet_id bigint NOT NULL UNIQUE,
