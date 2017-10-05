@@ -9,11 +9,24 @@ require('./bootstrap');
 
 window.Vue = require('vue');
 
-window.common = {
-    message: {
-        noRetweet: "This tweet hasn't been retweeted.",
+/*var searchForm = new Vue({
+    el: '#searchForm',
+    data: {
+        message: {},
+        query: '',
+    },
+    methods: {
+        calculate: function (event) {
+            axios.get('/calculate/?query=' + this.query)
+            .then(response => {
+                console.log(response.data);
+            })
+            .catch(e => {
+                console.log(e);
+            });
+        }
     }
-};
+});*/
 
 var mainApp = new Vue({
     el: '#app',
@@ -21,7 +34,7 @@ var mainApp = new Vue({
         query: '',
         inProgress: false,
         hideResults: true,
-        totalCount: 0,
+        peopleReached: 0,
         formError: false,
         tweet: {
             retweetCount: 0,
@@ -36,7 +49,6 @@ var mainApp = new Vue({
             if (error) {
                 $('#tweet_url').popover('show');
                 $('#tweet_url').focus();
-                $('#searchForm').addClass('has-error');
             }
         }
     },
@@ -47,7 +59,6 @@ var mainApp = new Vue({
             self.formError = false;
             self.inProgress = false;
             $('#tweet_url').popover('hide');
-            $('#searchForm').removeClass('has-error');
         },
         validateInputField: function () {
             var self = this;
@@ -55,7 +66,6 @@ var mainApp = new Vue({
                 self.formError = true;
                 $('#tweet_url').popover('show');
                 $('#tweet_url').focus();
-                $('#searchForm').addClass('has-error');
                 return false;
             }
         },
@@ -77,11 +87,10 @@ var mainApp = new Vue({
                 dataType: 'json',
                 success: function (response) {
                     if (response.success) {
-                        self.totalCount = response.data.sum;
+                        self.peopleReached = response.data.peopleReached;
                         self.links.unshift({ text: self.query });
                         self.tweet = response.data.tweet;
                         self.message = response.data.message;
-                        self.showMessage = true;
                         self.hideResults = false;
                     }
 
@@ -97,6 +106,7 @@ var mainApp = new Vue({
 
                     // Reset back to previou states
                     self.inProgress = false;
+                    self.showMessage = true;
                     $calculateButton.text("Calculate");
                     $calculateButton.removeAttr("disabled");
                 },

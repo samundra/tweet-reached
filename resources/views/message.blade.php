@@ -1,6 +1,6 @@
-<div class="col-md-12 message-box" v-if="formError">
+<div class="col-md-12 message-box" v-if="showMessage">
     <div class="row">
-        <div v-if="showMessage" class="alert alert-info">
+        <div class="alert alert-info">
             @{{ message }}
         </div>
     </div>

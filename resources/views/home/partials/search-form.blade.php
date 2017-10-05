@@ -1,7 +1,7 @@
 <div class="col-md-12 row">
     <div class="row">
-        <form action="/tweet/reached" role="form">
-            <div class="form-group" id="searchForm">
+        <form role="form">
+            <div class="form-group" id="searchForm" v-bind:class="{ 'has-error': formError }">
                 <div class="controls">
                     <div class="input-group">
                         <span class="input-group-addon">
