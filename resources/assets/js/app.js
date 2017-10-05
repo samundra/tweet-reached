@@ -9,25 +9,6 @@ require('./bootstrap');
 
 window.Vue = require('vue');
 
-/*var searchForm = new Vue({
-    el: '#searchForm',
-    data: {
-        message: {},
-        query: '',
-    },
-    methods: {
-        calculate: function (event) {
-            axios.get('/calculate/?query=' + this.query)
-            .then(response => {
-                console.log(response.data);
-            })
-            .catch(e => {
-                console.log(e);
-            });
-        }
-    }
-});*/
-
 var mainApp = new Vue({
     el: '#app',
     data: {

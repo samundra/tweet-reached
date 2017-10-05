@@ -22,6 +22,23 @@ Basically,
 $ git clone git clone https://samundra@bitbucket.org/samundra/tweet-reached.git
 $ cd tweet-reach && composer install
 $ php artisan key:generate
+$ npm install
+$ npm run prod
+```
+
+### Fix Permission Issues
+```bash
+$ sudo chgrp -R www-data storage bootstrap/cache
+$ sudo chmod -R ug+rwx storage bootstrap/cache
+```
+
+### Generate Assets
+```bash
+# Development Version
+$ npm run dev
+
+# On Production
+$ npm run prod
 ```
 
 ### Configurations
@@ -53,7 +70,7 @@ $ php artisan db:seed
 Once all the setup are done, in project root directory execute 
 
 ```bash
-$ php artian serve
+$ php artisan serve
 ```
 Then browse ```http://localhost:8000```. You should see a layout where you can enter tweet.
 
@@ -75,6 +92,18 @@ Time: 8.54 seconds, Memory: 18.00MB
 OK (20 tests, 82 assertions)
 ```
 
-### Contributing
+### How to Contribute
 - Did you find something missing. A PR would be most welcomed or having an
 issue would help too.
+
+
+### Coding Standard
+- PHP Coding Standard [PSR-2](http://www.php-fig.org/psr/psr-2/)
+
+Use ```phpcs```
+
+```bash
+$ phpcs --standard=PSR2 --ignore=*/tests/*,*/node_modules/*,*/vendor/*,*/public/*,*/storage/*,*/resources/*,*/bootstrap/cache/* .
+```
+
+Happy Coding :)
