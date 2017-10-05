@@ -5,5 +5,5 @@ return [
     'twitter_url' => 'Twitter URL',
     'calculate' => 'Calculate',
     'search_query_title' => 'Recent Queries',
-    'toggle_user_follower_count' => 'Toggle Userwise Follower Count',
+    'toggle_user_follower_count' => 'Click to Show/Hide Follower Count',
 ];
