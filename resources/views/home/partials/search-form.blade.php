@@ -1,4 +1,4 @@
-<div class="col-md-12">
+<div class="col-md-12 row">
     <div class="row">
         <form action="/tweet/reached" role="form">
             <div class="form-group" id="searchForm">

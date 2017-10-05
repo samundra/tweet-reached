@@ -26,18 +26,18 @@ var mainApp = new Vue({
             retweetCount: 0,
             retweeters: [],
         },
-        response: null,
         showMessage: false,
         message: {},
         links: []
     },
     methods: {
         resetFields: function () {
+            var self = this;
+            self.hideResults = true;
             $('#tweet_url').popover('hide');
             $('#searchForm').removeClass('has-error');
         },
         validateInputField: function (queryField) {
-            var self = this;
             if (queryField == '') {
                 $('#tweet_url').popover('show');
                 $('#tweet_url').focus();
@@ -63,7 +63,6 @@ var mainApp = new Vue({
                 dataType: 'json',
                 success: function (response) {
                     if (response.success) {
-                        self.response = response;
                         self.totalCount = response.data.sum;
                         self.links.unshift({ text: self.query });
                         self.tweet = response.data.tweet;
