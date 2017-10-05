@@ -1,4 +1,4 @@
-<div class="col-md-12 message-box">
+<div class="col-md-12 message-box" v-if="formError">
     <div class="row">
         <div v-if="showMessage" class="alert alert-info">
             @{{ message }}

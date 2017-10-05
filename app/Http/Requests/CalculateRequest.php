@@ -24,7 +24,20 @@ class CalculateRequest extends FormRequest
     public function rules()
     {
         return [
-            'query' => 'required|string|max:255',
+            'query' => 'required|string|max:255|url',
+        ];
+    }
+
+    /**
+     * @{inheritdoc}
+     */
+    public function messages()
+    {
+        return [
+            'query.required' => 'The query field is required.',
+            'query.max' => 'The query cannot exceed 255 character',
+            'query.string' => 'The query field must be tring',
+            'query.url' => 'The query must be valid url.'
         ];
     }
 }

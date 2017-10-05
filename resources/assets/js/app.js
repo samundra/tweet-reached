@@ -22,6 +22,7 @@ var mainApp = new Vue({
         inProgress: false,
         hideResults: true,
         totalCount: 0,
+        formError: false,
         tweet: {
             retweetCount: 0,
             retweeters: [],
@@ -30,15 +31,28 @@ var mainApp = new Vue({
         message: {},
         links: []
     },
+    watch : {
+        formError: function (error) {
+            if (error) {
+                $('#tweet_url').popover('show');
+                $('#tweet_url').focus();
+                $('#searchForm').addClass('has-error');
+            }
+        }
+    },
     methods: {
         resetFields: function () {
             var self = this;
             self.hideResults = true;
+            self.formError = false;
+            self.inProgress = false;
             $('#tweet_url').popover('hide');
             $('#searchForm').removeClass('has-error');
         },
-        validateInputField: function (queryField) {
-            if (queryField == '') {
+        validateInputField: function () {
+            var self = this;
+            if (self.query == '') {
+                self.formError = true;
                 $('#tweet_url').popover('show');
                 $('#tweet_url').focus();
                 $('#searchForm').addClass('has-error');
@@ -47,9 +61,9 @@ var mainApp = new Vue({
         },
         calculate: function (event) {
             var self = this;
-            self.resetFields();
-            self.validateInputField(this.query);
             self.inProgress = true;
+            self.resetFields();
+            self.validateInputField();
             let $calculateButton = $(event.target);
 
             // Disable the current element
@@ -73,18 +87,28 @@ var mainApp = new Vue({
 
                     if (response.success == false) {
                         self.message = response.data.message;
-                        self.showMessage = true;
-                        self.hideResults = true;
+                        self.error = true;
                     }
+
+                    if (response.errors || response.exception) {
+                        self.message = response.message;
+                        self.error = true;
+                    }
+
                     // Reset back to previou states
                     self.inProgress = false;
                     $calculateButton.text("Calculate");
                     $calculateButton.removeAttr("disabled");
                 },
-                error: function (error, response) {
-                    console.log(response);
-                    self.inProgress = false;
+                error: function (jqXhr, options, error) {
+                    const response = jqXhr.responseJSON;
+
+                    self.message = response.errors.query.join(',');
+                    self.formError = true;
+                    self.showMessage = true;
                     self.hideResults = true;
+                    self.inProgress = false;
+
                     $calculateButton.text("Calculate");
                     $calculateButton.removeAttr("disabled");
                     $('#tweet_url').popover();

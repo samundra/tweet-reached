@@ -14,7 +14,7 @@
                             name="tweet_url"
                             data-toggle="popover"
                             data-placement="bottom"
-                            data-title="{{ __('message.missing_url_title') }}"
+                            data-title="{{ __('message.invalid_url_title') }}"
                             data-content="{{ __('message.enter_valid_url') }}"
                             placeholder="{{ __('message.placeholder_enter_url') }}" />
                         <span class="input-group-btn">

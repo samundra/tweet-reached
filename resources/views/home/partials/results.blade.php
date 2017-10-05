@@ -1,4 +1,4 @@
-<div class="row">
+<div class="row" v-if="!formError">
     <div class="col-md-12">
         <div class="row">
             <div v-if="inProgress" class="col-md-12">
