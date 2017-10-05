@@ -74,13 +74,13 @@ class EngagementController extends Controller
         $isCached = $this->tweetRepository->isCacheValid($id, $format, $expire);
 
         if ($isCached) {
-            $sum = $this->tweetRepository->getCachedSum($id);
+            $peopleReached = $this->tweetRepository->getCachedSum($id);
             $retweetInformation = $this->tweetRepository->getRetweetInformation($id);
 
-            $this->logger->info('Returning from cache', ['id' => $id, 'sum' => $sum]);
-            return $this->showSuccessJsonResponse([
+            $this->logger->info('Returning from cache', ['id' => $id, 'peopleReached' => $peopleReached]);
+            return $this->showJsonResponse(true, [
                 'id' => $id,
-                'sum' => $sum,
+                'peopleReached' => $peopleReached,
                 'tweet' => $retweetInformation,
                 'message' => __('message.from_cache'),
             ]);
@@ -90,24 +90,30 @@ class EngagementController extends Controller
 
         try {
             // if it has never been retweeted then no need to aggregate data
+            $updatedAt = new Carbon('now', 'UTC');
             if (false === $this->tweetRepository->isRetweeted($id)) {
-                return $this->showNoRetweetJsonResponse();
+                $peopleReached = 0;
+                $retweetInformation = ['retweetCount' => 0, 'retweeters' => []];
+                $defaultRecord = [
+                    'id' => $id,
+                    'peopleReached' => $peopleReached,
+                    'tweet' => $retweetInformation,
+                    'message' => __('message.no_retweet'),
+                ];
+                $this->tweetRepository->persistInDB($id, $peopleReached, $updatedAt, $retweetInformation);
+
+                return $this->showJsonResponse(false, $defaultRecord);
             }
 
             $aggregatedData = $this->tweetRepository->aggregate($id, $this->calculator);
-            $sum = $aggregatedData['sum'];
+            $peopleReached = $aggregatedData['peopleReached'];
             $retweetInformation = $aggregatedData['retweetInformation'];
 
-            $this->tweetRepository->persistInDB(
-                $id,
-                $sum,
-                new Carbon('now', 'UTC'),
-                $retweetInformation
-            );
+            $this->tweetRepository->persistInDB($id, $peopleReached, $updatedAt, $retweetInformation);
 
-            return $this->showSuccessJsonResponse([
+            return $this->showJsonResponse(true, [
                 'id' => $id,
-                'sum' => $sum,
+                'peopleReached' => $peopleReached,
                 'tweet' => $retweetInformation,
                 'message' => __('message.from_twitter_api'),
             ]);
@@ -118,7 +124,7 @@ class EngagementController extends Controller
                 'method' => __METHOD__,
                 'line' => __LINE__,
             ]);
-            return $this->showErrorJsonResponse([
+            return $this->showJsonResponse(false, [
                 'id' => $id,
                 'message' => 'Error ::' . $exception->getMessage(),
             ]);
@@ -127,41 +133,15 @@ class EngagementController extends Controller
 
     /**
      * Success Json response
-     * @param $data
+     * @param $type Type of Response (true|false)
+     * @param $data Data to send to client
      * @return \Illuminate\Http\JsonResponse
      */
-    public function showErrorJsonResponse($data)
+    public function showJsonResponse($type, $data)
     {
         return new JsonResponse([
-            'success' => false,
+            'success' => $type,
             'data' => $data,
-        ]);
-    }
-
-    /**
-     * Success Json response
-     * @param $data
-     * @return \Illuminate\Http\JsonResponse
-     */
-    public function showSuccessJsonResponse($data)
-    {
-        return new JsonResponse([
-            'success' => true,
-            'data' => $data,
-        ]);
-    }
-
-    /**
-     * Show the Empty Response
-     * @return \Illuminate\Http\JsonResponse
-     */
-    public function showNoRetweetJsonResponse()
-    {
-        return new JsonResponse([
-            'success' => false,
-            'data' => [
-                'message' => __('message.no_retweet')
-            ]
         ]);
     }
 }

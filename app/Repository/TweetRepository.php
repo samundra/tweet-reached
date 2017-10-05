@@ -123,32 +123,32 @@ class TweetRepository
 
     /**
      * @param string $id
-     * @param int $sum
+     * @param int $peopleReached
      * @param Carbon $updatedAt
      * @param array $retweetInformation
      * @throws \Exception
      */
-    public function persistInDB(string $id, int $sum, Carbon $updatedAt, array $retweetInformation)
+    public function persistInDB(string $id, int $peopleReached, Carbon $updatedAt, array $retweetInformation)
     {
-        $this->logger->info('Try to persist in DB.', ['id' => $id, 'sum' => $sum]);
+        $this->logger->info('Try to persist in DB.', ['id' => $id, 'peopleReached' => $peopleReached]);
 
         // Delete the previous record, we don't want to insert duplicate
         $record = $this->getTweetById($id);
 
         if ($record) {
-            $this->logger->info('Deleted previous cache record.', ['id' => $id, 'sum' => $sum]);
+            $this->logger->info('Deleted previous cache record.', ['id' => $id, 'peopleReached' => $peopleReached]);
             $this->destroy($record->id);
         }
 
         $this->tweet->where(['tweet_id' => $id])
            ->create([
                'tweet_id' => $id,
-               'total_sum' => $sum,
+               'total_sum' => $peopleReached,
                'updated_at' => $updatedAt,
                'info' => json_encode($retweetInformation),
            ]);
 
-        $this->logger->info('Persisted cache in DB', ['id' => $id, 'sum' => $sum]);
+        $this->logger->info('Persisted cache in DB', ['id' => $id, 'peopleReached' => $peopleReached]);
     }
 
     /**
@@ -190,17 +190,17 @@ class TweetRepository
         // It's efficient then making 100 individual request with user/show/:id
         $users = $this->twitter->getUsersLookup(['user_id' => $userIds]);
 
-        $sum = $calculator->calculate($users);
+        $peopleReached = $calculator->calculate($users);
         $retweetInformation = $this->extractRetweetInformation($id, $users);
 
         $this->logger->info('Calculated tweet reach.', [
             'id' => $id,
-            'sum' => $sum,
+            'peopleReached' => $peopleReached,
             'info' => json_encode($retweetInformation)
         ]);
 
         return [
-            'sum' => $sum,
+            'peopleReached' => $peopleReached,
             'retweetInformation' => $retweetInformation,
         ];
     }
@@ -216,13 +216,13 @@ class TweetRepository
         $tweet = $this->twitter->getTweet($id, ['format' => 'array']);
 
         $information = [];
-        $information['retweetCount'] = $tweet['retweet_count'];
+        $information['retweetCount'] = number_format($tweet['retweet_count']);
         $information['retweeters'] = [];
 
         foreach ($users as $user) {
             $information['retweeters'][] = [
                 'name' => $user->screen_name,
-                'followersCount' => $user->followers_count,
+                'followersCount' => number_format($user->followers_count),
             ];
         }
 
