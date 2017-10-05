@@ -32,7 +32,7 @@ class TweetRepository
     protected $twitter;
 
     /**
-     * @var
+     * @var \Psr\Log\LoggerInterface $logger
      */
     protected $logger;
 
@@ -53,7 +53,7 @@ class TweetRepository
     }
 
     /**
-     * Return the Tweet
+     * Return the Tweet from the cached content
      * @param string $id
      * @return TweetReachModel|null
      */
@@ -69,12 +69,13 @@ class TweetRepository
      * @param string $format Format for the date supplied to carbon
      * @param int $expire Cache expire time
      * @return bool Returns true/false based on whether cache is valid or not
-     * Returns true - if record found in DB and still valid
+     * Returns true - if record found in DB and still valid &&
      *  - 2 hour has not passed yet
      * Returns false for following cases:
      *  - if record not found in DB
-     *  - cache is expired and needs to be refreshed. By default cache is valid
-     *    only for 2 hour, @see tweetreach.cache_expire key in config/tweetreach.php
+     *  - cache is expired and needs to be refreshed.
+     * By default cache is valid only for 2 hour,
+     * @see tweetreach.cache_expire key in config/tweetreach.php
      */
     public function isCacheValid(string $id, string $format, int $expire) : bool
     {
@@ -93,9 +94,10 @@ class TweetRepository
     }
 
     /**
-     * Query the DB and return the cached sum
-     * @param string $id
-     * @return int Total Sum
+     * Query the DB and return the cached sum. This is count of people reached
+     * by the retweet.
+     * @param string $id Tweet ID
+     * @return int count of people reached by the retweet.
      * @throws \Exception
      */
     public function getCachedSum(string $id) : int
@@ -111,6 +113,7 @@ class TweetRepository
     }
 
     /**
+     * Delete the existing record for the requested tweet.
      * @param int $id Record to delete from DB
      * @return bool True if deleted otherwise false
      */
@@ -122,17 +125,20 @@ class TweetRepository
     }
 
     /**
-     * @param string $id
-     * @param int $peopleReached
-     * @param Carbon $updatedAt
-     * @param array $retweetInformation
-     * @throws \Exception
+     * Persist the record in the database. Before trying to persist it checks
+     * if the record is already there or not. If it exists then it deletes the
+     * record and makes a new entry. This is simpler and faster than doing the
+     * update.
+     * @param string $id Tweet ID
+     * @param int $peopleReached Total Followers Reached
+     * @param Carbon $updatedAt Timetamp when record i updated
+     * @param array $retweetInformation Retweet Information array
+     * @throws \Exception Throws Database related exceptions
      */
     public function persistInDB(string $id, int $peopleReached, Carbon $updatedAt, array $retweetInformation)
     {
         $this->logger->info('Try to persist in DB.', ['id' => $id, 'peopleReached' => $peopleReached]);
 
-        // Delete the previous record, we don't want to insert duplicate
         $record = $this->getTweetById($id);
 
         if ($record) {
@@ -188,6 +194,7 @@ class TweetRepository
 
         // UsersLookup allows us to make bulk request per 100 user,
         // It's efficient then making 100 individual request with user/show/:id
+        // @see https://developer.twitter.com/en/docs/accounts-and-users/follow-search-get-users/api-reference/get-users-lookup
         $users = $this->twitter->getUsersLookup(['user_id' => $userIds]);
 
         $peopleReached = $calculator->calculate($users);
@@ -207,9 +214,9 @@ class TweetRepository
 
     /**
      * Extract Tweet information like, retweet count, retweeters
-     * @param string $id
-     * @param array $users
-     * @return array
+     * @param string $id Tweet ID
+     * @param array $users Array of users
+     * @return array Retweet Information
      */
     protected function extractRetweetInformation(string $id, array $users) : array
     {
@@ -230,9 +237,9 @@ class TweetRepository
     }
 
     /**
-     * Return Tweet Information
-     * @param string $id
-     * @return array
+     * Return ReTweet Information from the cached data
+     * @param string $id Twitter ID
+     * @return array Retweet Information obtained From DB
      */
     public function getRetweetInformation(string $id) : array
     {
@@ -242,9 +249,11 @@ class TweetRepository
     }
 
     /**
-     * Get Retweet Count for the tweet
-     * @param string $id
-     * @return mixed
+     * Get Retweet Count for the tweet. This make API call to the twitter and
+     * should only be used as guard to process other requests which depend on
+     * retweet count. Alternate way is to directly check the tweet->retweeted_status
+     * @param string $id Tweet ID
+     * @return bool Returns true if retweeted otherwise false
      */
     public function isRetweeted(string $id)
     {

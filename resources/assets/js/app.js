@@ -67,6 +67,9 @@ var mainApp = new Vue({
                 method: 'GET',
                 dataType: 'json',
                 success: function (response) {
+                    // Keep the track of successful tweets and push to search list
+                    // When error is triggered the mesage is shown to user
+                    // The error can be excepation, validation failed
                     if (response.success) {
                         self.peopleReached = response.data.peopleReached;
                         self.links.unshift({ text: self.query });
