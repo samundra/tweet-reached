@@ -20,7 +20,7 @@ var mainApp = new Vue({
     data: {
         query: '',
         inProgress: false,
-        firstTime: true,
+        hideResults: true,
         totalCount: 0,
         tweet: {
             retweetCount: 0,
@@ -67,14 +67,15 @@ var mainApp = new Vue({
                         self.totalCount = response.data.sum;
                         self.links.unshift({ text: self.query });
                         self.tweet = response.data.tweet;
-                        self.firstTime = false;
                         self.message = response.data.message;
                         self.showMessage = true;
+                        self.hideResults = false;
                     }
 
                     if (response.success == false) {
                         self.message = response.data.message;
                         self.showMessage = true;
+                        self.hideResults = true;
                     }
                     // Reset back to previou states
                     self.inProgress = false;
@@ -84,6 +85,7 @@ var mainApp = new Vue({
                 error: function (error, response) {
                     console.log(response);
                     self.inProgress = false;
+                    self.hideResults = true;
                     $calculateButton.text("Calculate");
                     $calculateButton.removeAttr("disabled");
                     $('#tweet_url').popover();

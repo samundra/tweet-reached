@@ -4,7 +4,7 @@
             <h2>{{ __('message.calculating') }} ... </h2>
         </div>
         <div v-if="!inProgress" class="col-md-12">
-            <div class="" v-if="!firstTime">
+            <div class="" v-if="!hideResults">
                 <h3>
                     <span class="count">@{{ tweet.retweetCount }} {{ __('app.retweets') }} | </span>
                     <span class="count">@{{ totalCount }} {{ __('app.people_reached') }}</span>
