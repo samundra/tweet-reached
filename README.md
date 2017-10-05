@@ -52,7 +52,7 @@ TWITTER_CONSUMER_SECRET=
 TWITTER_ACCESS_TOKEN=
 TWITTER_ACCESS_TOKEN_SECRET=
 ```
-- Tweet are cache for 2 hour by default. To increase the cache expire time update
+- Tweet are cached for 2 hour by default. To increase the cache expire time update
 ```APP_TWEET_CACHE_EXPIRE``` environment variable.
 
 ### Database
@@ -93,14 +93,12 @@ OK (20 tests, 82 assertions)
 ```
 
 ### How to Contribute
-- Did you find something missing. A PR would be most welcomed or having an
-issue would help too.
-
+- Fork it and send a PR with feature request.
+- Find something that can be done better, create issue or send a PR directly :)
+- Participate in the discussions
 
 ### Coding Standard
 - PHP Coding Standard [PSR-2](http://www.php-fig.org/psr/psr-2/)
-
-Use ```phpcs```
 
 ```bash
 $ phpcs --standard=PSR2 --ignore=*/tests/*,*/node_modules/*,*/vendor/*,*/public/*,*/storage/*,*/resources/*,*/bootstrap/cache/* .
