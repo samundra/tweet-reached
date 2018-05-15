@@ -1,3 +1,6 @@
+
+![Screenshot](https://user-images.githubusercontent.com/760855/40038695-349921fa-5833-11e8-96c6-96f61741a207.png)
+
 ## Twitter Retweet Follower Count Calculator
 A demo application to calculate the people reached for the specific retweet.
 This application has been built on [Laravel5.5](https://github.com/laravel/laravel/releases/tag/v5.5.0)
@@ -20,10 +23,9 @@ Basically,
 
 ```bash
 $ git clone git clone https://samundra@bitbucket.org/samundra/tweet-reached.git
-$ cd tweet-reach && composer install
-$ php artisan key:generate
-$ npm install
-$ npm run prod
+$ cd tweet-reached && composer install
+$ copy .env.example .env && php artisan key:generate
+$ npm install && npm run prod
 ```
 
 ### Fix Permission Issues
@@ -32,6 +34,7 @@ $ sudo chgrp -R www-data storage bootstrap/cache
 $ sudo chmod -R ug+rwx storage bootstrap/cache
 ```
 
+## OPTIONAL
 ### Generate Assets
 ```bash
 # Development Version
@@ -77,6 +80,11 @@ Then browse ```http://localhost:8000```. You should see a layout where you can e
 ### Testing
 All ```tests``` are in ```tests``` folder. To run test execute the below
 command from project root directory.
+
+### Troubleshooting
+- Open the dev inspector and look in console. If there are 500 errors then you likely forgot to setup the twitter
+credentials.
+- You forgot to setup the database connection and run migrations
 
 ```bash
 $ vendor/bin/phpunit --debug
